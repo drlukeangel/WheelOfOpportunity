@@ -24,7 +24,7 @@ export type GroupMembership = {
   userId: string;
 };
 
-export type GameType = "slot" | "claw" | "race" | "cards" | "wheelEdge" | "plinko";
+export type GameType = "slot" | "claw" | "race" | "cards" | "wheelEdge" | "plinkoWrong";
 export type PickMode = "depleting" | "fullRandom";
 
 export type GameRun = {

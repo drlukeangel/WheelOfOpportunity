@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 const tabs = [
   ["play", "Play"],
-  ["leaderboards", "History"],
-  ["admin-users", "People"],
-  ["admin-groups", "Groups"],
+  ["leaderboards", "Leaderboards"],
+  ["admin-users", "Admin Users"],
+  ["admin-groups", "Admin Groups"],
   ["admin-import", "Import"],
   ["settings", "Settings"]
 ] as const;
@@ -13,10 +13,7 @@ export function Layout({ page, onPageChange, children }: { page: string; onPageC
   return (
     <div className="app-shell">
       <header>
-        <div className="title-block">
-          <h1>🎯 Wheel of Opportunity</h1>
-          <p className="tagline">Every voice. Every turn. No favorites.</p>
-        </div>
+        <h1>🎯 Strategy Picker Arcade</h1>
         <nav>
           {tabs.map(([key, label]) => (
             <button key={key} className={page === key ? "active" : ""} onClick={() => onPageChange(key)}>

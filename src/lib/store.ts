@@ -11,7 +11,7 @@ import type {
   User
 } from "../types";
 
-const DATA_KEY = "wheel-of-opportunity:v1";
+const DATA_KEY = "strategy-picker-arcade:v1";
 
 const defaultData: AppData = {
   users: [],
