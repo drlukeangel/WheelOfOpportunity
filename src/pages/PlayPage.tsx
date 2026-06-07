@@ -3,21 +3,23 @@ import type { CSSProperties } from "react";
 import type { GameType, PickMode } from "../types";
 
 const gameLabels: Record<GameType, string> = {
-  slot: "A - Emoji Slot Machine",
-  claw: "B - Claw Machine",
-  race: "C - Race Game",
-  cards: "D - Mystery Card Flip",
-  wheelEdge: "E - Spin the Wheel (Edge)",
-  plinkoWrong: "F - Plinko: The Price is Wrong"
+  slot: "Slot Machine",
+  claw: "Claw Machine",
+  race: "Race to the Mic",
+  cards: "Mystery Card",
+  wheelEdge: "Spinning Wheel",
+  plinko: "Plinko Drop"
 };
+
+const plinkoSlotLabels = ["GO", "NEXT", "SPEAK", "STAGE", "LEAD"];
 
 type PlayResult = { selectedUserId: string } | null;
 
 export function PlayPage({ data, playRun }: any) {
   const [groupId, setGroupId] = useState("");
-  const [gameType, setGameType] = useState<GameType>("slot");
+  const [gameType, setGameType] = useState<GameType>("wheelEdge");
   const [mode, setMode] = useState<PickMode>("depleting");
-  const [resultText, setResultText] = useState("No run yet");
+  const [resultText, setResultText] = useState("Pick a group, then spin.");
   const [displayName, setDisplayName] = useState("Ready");
   const [isPlaying, setIsPlaying] = useState(false);
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -32,6 +34,18 @@ export function PlayPage({ data, playRun }: any) {
 
   const wheelSegments = useMemo(() => groupUsers.slice(0, 10), [groupUsers]);
 
+  const poolKey = `${groupId}:${gameType}`;
+  const remainingPool = useMemo(() => {
+    if (!groupId) return [];
+    const pool = data.depletionPools.find((p: any) => p.key === poolKey);
+    return pool?.remainingUserIds ?? groupUsers.map((u: any) => u.id);
+  }, [data.depletionPools, poolKey, groupUsers, groupId]);
+
+  const alreadyPickedThisRound = useMemo(
+    () => groupUsers.filter((u: any) => !remainingPool.includes(u.id)),
+    [groupUsers, remainingPool]
+  );
+
   useEffect(() => {
     return () => {
       if (playTimer.current) window.clearInterval(playTimer.current);
@@ -41,33 +55,33 @@ export function PlayPage({ data, playRun }: any) {
 
   const resolveRun = (result: PlayResult) => {
     if (!result) {
-      setResultText("No users in this group.");
-      setDisplayName("No candidates");
+      setResultText("No one in this group yet.");
+      setDisplayName("Empty group");
       setIsPlaying(false);
       return;
     }
     const winner = data.users.find((u: any) => u.id === result.selectedUserId);
-    setDisplayName(`${winner?.icon ?? "🏆"} ${winner?.name ?? "Unknown"}`);
-    setResultText(`Winner: ${winner?.icon ?? "🏆"} ${winner?.name ?? "Unknown"}`);
+    setDisplayName(`${winner?.icon ?? "🎉"} ${winner?.name ?? "Unknown"}`);
+    setResultText(`Up next: ${winner?.icon ?? "🎉"} ${winner?.name ?? "Unknown"}`);
     setIsPlaying(false);
   };
 
   const run = () => {
     if (!groupId || isPlaying) return;
     if (groupUsers.length === 0) {
-      setResultText("No users in this group.");
-      setDisplayName("No candidates");
+      setResultText("No one in this group yet.");
+      setDisplayName("Empty group");
       return;
     }
 
     setIsPlaying(true);
-    setResultText("Spinning...");
+    setResultText("Spinning…");
 
     if (gameType === "wheelEdge") {
       setWheelRotation((prev) => prev + 1080 + Math.floor(Math.random() * 900));
     }
 
-    if (gameType === "plinkoWrong") {
+    if (gameType === "plinko") {
       setPlinkoX(Math.floor(Math.random() * 7) - 3);
     }
 
@@ -101,7 +115,7 @@ export function PlayPage({ data, playRun }: any) {
           </select>
         </label>
         <label>
-          Game
+          Style
           <select value={gameType} onChange={(e) => setGameType(e.target.value as GameType)}>
             {Object.entries(gameLabels).map(([value, label]) => (
               <option key={value} value={value}>
@@ -113,11 +127,46 @@ export function PlayPage({ data, playRun }: any) {
         <label>
           Mode
           <select value={mode} onChange={(e) => setMode(e.target.value as PickMode)}>
-            <option value="depleting">Depleting pool</option>
-            <option value="fullRandom">Full random</option>
+            <option value="depleting">Round-robin (everyone goes once)</option>
+            <option value="fullRandom">Pure random</option>
           </select>
         </label>
       </div>
+
+      {groupId && mode === "depleting" && groupUsers.length > 0 && (
+        <div className="pool-status">
+          <div className="pool-headline">
+            <strong>{remainingPool.length}</strong> of {groupUsers.length} still to be picked this round
+            {remainingPool.length === groupUsers.length && " — fresh round"}
+            {remainingPool.length === 0 && " — round complete, next spin starts a new one"}
+          </div>
+          <div className="pool-dots" aria-label="round status">
+            {groupUsers.map((u: any) => {
+              const picked = !remainingPool.includes(u.id);
+              return (
+                <span
+                  key={u.id}
+                  className={`pool-dot ${picked ? "picked" : ""}`}
+                  title={`${u.name}${picked ? " (already picked)" : " (still queued)"}`}
+                >
+                  {u.icon ?? "•"}
+                </span>
+              );
+            })}
+          </div>
+          {alreadyPickedThisRound.length > 0 && (
+            <p className="hint">
+              Already picked: {alreadyPickedThisRound.map((u: any) => u.name).join(", ")}
+            </p>
+          )}
+        </div>
+      )}
+
+      {groupId && mode === "fullRandom" && groupUsers.length > 0 && (
+        <div className="pool-status warn">
+          Pure random — someone may be picked twice before others are picked once.
+        </div>
+      )}
 
       <div className={`game-stage game-${gameType} ${isPlaying ? "playing" : ""}`}>
         {gameType === "slot" && (
@@ -147,7 +196,7 @@ export function PlayPage({ data, playRun }: any) {
         )}
         {gameType === "wheelEdge" && (
           <div className="wheel-wrap">
-            <div className="wheel-pointer">▼ EDGE</div>
+            <div className="wheel-pointer">▼</div>
             <div className="wheel" style={{ transform: `rotate(${wheelRotation}deg)` }}>
               {wheelSegments.map((u: any, idx: number) => (
                 <div
@@ -162,9 +211,9 @@ export function PlayPage({ data, playRun }: any) {
             </div>
           </div>
         )}
-        {gameType === "plinkoWrong" && (
+        {gameType === "plinko" && (
           <div className="plinko-wrap">
-            <h4>💥 Plinko: The Price is Wrong 💥</h4>
+            <h4>🎯 Plinko Drop</h4>
             <div className="plinko-board">
               <div className={`plinko-chip ${isPlaying ? "dropping" : ""}`} style={{ "--x": plinkoX } as CSSProperties}>🪙</div>
               {Array.from({ length: 30 }).map((_, i) => (
@@ -172,22 +221,19 @@ export function PlayPage({ data, playRun }: any) {
               ))}
             </div>
             <div className="plinko-slots">
-              <span>NOPE</span>
-              <span>TRY AGAIN</span>
-              <span>WRONG</span>
-              <span>ALMOST</span>
-              <span>CHAOS</span>
+              {plinkoSlotLabels.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
             </div>
-            <p className="plinko-caption">And the loser-winner is: {displayName}</p>
+            <p className="plinko-caption">{displayName}</p>
           </div>
         )}
       </div>
 
-      <button disabled={!groupId || isPlaying} onClick={run}>
-        ▶ {isPlaying ? "Playing..." : "Play"}
+      <button disabled={!groupId || isPlaying} onClick={run} className="primary big">
+        ▶ {isPlaying ? "Spinning…" : "Spin"}
       </button>
       <p className="result">{resultText}</p>
-      <p>Participants in group: {groupUsers.length}</p>
     </section>
   );
 }

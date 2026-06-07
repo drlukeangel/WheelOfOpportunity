@@ -67,6 +67,19 @@ textarea {
   color: #e2e8f0;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  padding: 0;
+  accent-color: #38bdf8;
+}
+
+input[type="color"] {
+  width: 56px;
+  height: 36px;
+  padding: 2px;
+}
+
 ul,
 ol {
   padding-left: 1.2rem;
@@ -315,8 +328,135 @@ li {
 
 .plinko-caption {
   margin-top: 0.5rem;
-  color: #fda4af;
+  color: #facc15;
   font-weight: 600;
+}
+
+/* Header / tagline */
+.title-block h1 {
+  margin: 0;
+}
+
+.tagline {
+  margin: 0.1rem 0 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* Helpers */
+.hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.full-row {
+  grid-column: 1 / -1;
+}
+
+.field-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+/* Icon grid (used for both people + groups) */
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.icon-btn {
+  font-size: 1.15rem;
+  padding: 0.3rem 0.5rem;
+  background: #0b1220;
+  border: 1px solid #334155;
+}
+
+.icon-btn.selected {
+  border-color: #38bdf8;
+  background: #075985;
+}
+
+/* People + groups list */
+.person-list {
+  margin-top: 1rem;
+}
+
+.member-list {
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Pool status — the fairness story made visible */
+.pool-status {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #1e3a5f;
+  background: #0b2438;
+  border-radius: 0.6rem;
+}
+
+.pool-status.warn {
+  border-color: #78350f;
+  background: #2a1908;
+}
+
+.pool-headline {
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.pool-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.pool-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid #38bdf8;
+  background: #0b1220;
+  font-size: 0.9rem;
+}
+
+.pool-dot.picked {
+  border-color: #334155;
+  background: #1e293b;
+  opacity: 0.45;
+}
+
+/* Primary action button */
+button.primary {
+  background: #0ea5e9;
+  color: #082f49;
+  border-color: #0ea5e9;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #38bdf8;
+}
+
+button.big {
+  padding: 0.75rem 1.25rem;
+  font-size: 1.05rem;
+  margin-top: 0.75rem;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @keyframes plinkoDrop {

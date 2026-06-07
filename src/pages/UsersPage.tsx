@@ -1,32 +1,38 @@
 import { useState } from "react";
 import { readFileDataUrl } from "../lib/utils";
 
+const userIcons = ["🙂", "🦊", "🦉", "🐢", "🦄", "🐙", "🐳", "🐝", "🦋", "🌿", "🌊", "⭐", "🚀", "🎨", "🎵", "🔧"];
+
 export function UsersPage({ data, addUser, deleteUser }: any) {
-  const [form, setForm] = useState({ name: "", email: "", employeeId: "", icon: "", color: "#7c3aed", photoDataUrl: "" });
+  const [form, setForm] = useState({ name: "", email: "", employeeId: "", icon: "🙂", color: "#7c3aed", photoDataUrl: "" });
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
-    if (data.users.some((u: any) => u.email && u.email === form.email)) return alert("Email must be unique");
-    if (data.users.some((u: any) => u.employeeId === form.employeeId)) return alert("Employee ID must be unique");
+    if (form.email && data.users.some((u: any) => u.email && u.email === form.email)) {
+      alert("Email must be unique");
+      return;
+    }
+    if (form.employeeId && data.users.some((u: any) => u.employeeId === form.employeeId)) {
+      alert("ID must be unique");
+      return;
+    }
     addUser(form);
-    setForm({ name: "", email: "", employeeId: "", icon: "", color: "#7c3aed", photoDataUrl: "" });
+    setForm({ name: "", email: "", employeeId: "", icon: "🙂", color: "#7c3aed", photoDataUrl: "" });
   };
 
   return (
     <section>
-      <h2>Admin / Users</h2>
+      <h2>People</h2>
+      <p className="hint">Add everyone who might be picked. Email and ID are optional.</p>
+
       <form onSubmit={submit} className="grid">
         <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input
-          placeholder="Employee ID"
-          value={form.employeeId}
-          onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
-        />
+        <input placeholder="Email (optional)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <input placeholder="ID (optional)" value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} />
 
-        <div>
-          <p className="field-label">Pick icon</p>
+        <div className="full-row">
+          <p className="field-label">Pick an icon</p>
           <div className="icon-grid">
             {userIcons.map((icon) => (
               <button
@@ -47,7 +53,7 @@ export function UsersPage({ data, addUser, deleteUser }: any) {
         </label>
 
         <label>
-          Picture
+          Photo (optional)
           <input
             type="file"
             accept="image/*"
@@ -60,31 +66,16 @@ export function UsersPage({ data, addUser, deleteUser }: any) {
           />
         </label>
 
-        <button type="submit">Add User</button>
+        <button type="submit" className="primary">Add person</button>
       </form>
 
-      <ul>
+      <ul className="person-list">
         {data.users.map((u: any) => (
           <li key={u.id}>
             <span style={{ color: u.color }}>
-              {u.icon ?? "🙂"} {u.name} ({u.employeeId || "no id"})
+              {u.icon ?? "🙂"} {u.name}{u.employeeId ? ` (${u.employeeId})` : ""}
             </span>
-        <input placeholder="Employee ID" value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} />
-        <input placeholder="Icon" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
-        <input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
-        <input type="file" accept="image/*" onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          const photoDataUrl = await readFileDataUrl(file);
-          setForm((prev) => ({ ...prev, photoDataUrl }));
-        }} />
-        <button type="submit">Add User</button>
-      </form>
-      <ul>
-        {data.users.map((u: any) => (
-          <li key={u.id}>
-            <span style={{ color: u.color }}>{u.icon ?? "🙂"} {u.name} ({u.employeeId})</span>
-            <button onClick={() => deleteUser(u.id)}>Delete</button>
+            <button onClick={() => deleteUser(u.id)}>Remove</button>
           </li>
         ))}
       </ul>

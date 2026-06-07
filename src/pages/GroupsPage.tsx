@@ -4,25 +4,6 @@ const groupIcons = ["👥", "🧩", "🏴", "🎮", "🎤", "⚙️", "📣", "�
 
 export function GroupsPage({ data, addGroup, deleteGroup, setGroupMembers }: any) {
   const [form, setForm] = useState({ name: "", description: "", icon: "👥", color: "#0ea5e9" });
-
-  const membersByGroup = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const membership of data.memberships) {
-      if (!map.has(membership.groupId)) map.set(membership.groupId, new Set());
-      map.get(membership.groupId)?.add(membership.userId);
-    }
-    return map;
-  }, [data.memberships]);
-
-  const toggleMembership = (groupId: string, userId: string, checked: boolean) => {
-    const currentMembers = [...(membersByGroup.get(groupId) ?? new Set<string>())];
-    const nextMembers = checked
-      ? Array.from(new Set([...currentMembers, userId]))
-      : currentMembers.filter((id) => id !== userId);
-    setGroupMembers(groupId, nextMembers);
-  };
-export function GroupsPage({ data, addGroup, deleteGroup, setGroupMembers }: any) {
-  const [form, setForm] = useState({ name: "", description: "", icon: "", color: "#0ea5e9" });
   const [selectedGroupId, setSelectedGroupId] = useState("");
 
   const selectedMembers = useMemo(
@@ -30,30 +11,55 @@ export function GroupsPage({ data, addGroup, deleteGroup, setGroupMembers }: any
     [data.memberships, selectedGroupId]
   );
 
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    addGroup(form);
+    setForm({ name: "", description: "", icon: "👥", color: "#0ea5e9" });
+  };
+
   return (
     <section>
-      <h2>Admin / Groups</h2>
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        if (!form.name.trim()) return;
-        addGroup(form);
-        setForm({ name: "", description: "", icon: "", color: "#0ea5e9" });
-      }} className="grid">
+      <h2>Groups</h2>
+      <p className="hint">A group is who's eligible to be picked — a standup, an oncall rotation, a working group.</p>
+
+      <form onSubmit={submit} className="grid">
         <input placeholder="Group name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        <input placeholder="Icon" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} />
-        <input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
-        <button type="submit">Add Group</button>
+        <input placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
+        <div className="full-row">
+          <p className="field-label">Pick an icon</p>
+          <div className="icon-grid">
+            {groupIcons.map((icon) => (
+              <button
+                key={icon}
+                type="button"
+                className={`icon-btn ${form.icon === icon ? "selected" : ""}`}
+                onClick={() => setForm({ ...form, icon })}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label>
+          Color
+          <input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
+        </label>
+
+        <button type="submit" className="primary">Add group</button>
       </form>
 
-      <h3>Memberships</h3>
+      <h3>Members</h3>
       <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}>
-        <option value="">Select group</option>
-        {data.groups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        <option value="">Pick a group to manage members</option>
+        {data.groups.map((g: any) => <option key={g.id} value={g.id}>{g.icon ?? "👥"} {g.name}</option>)}
       </select>
 
       {selectedGroupId && (
-        <div>
+        <div className="member-list">
+          {data.users.length === 0 && <p className="hint">Add people first under the <em>People</em> tab.</p>}
           {data.users.map((u: any) => {
             const checked = selectedMembers.includes(u.id);
             return (
@@ -62,22 +68,25 @@ export function GroupsPage({ data, addGroup, deleteGroup, setGroupMembers }: any
                   type="checkbox"
                   checked={checked}
                   onChange={(e) => {
-                    const next = e.target.checked ? [...selectedMembers, u.id] : selectedMembers.filter((id: string) => id !== u.id);
+                    const next = e.target.checked
+                      ? [...selectedMembers, u.id]
+                      : selectedMembers.filter((id: string) => id !== u.id);
                     setGroupMembers(selectedGroupId, next);
                   }}
                 />
-                {u.name}
+                <span style={{ color: u.color }}>{u.icon ?? "🙂"} {u.name}</span>
               </label>
             );
           })}
         </div>
       )}
 
-      <ul>
+      <h3>All groups</h3>
+      <ul className="person-list">
         {data.groups.map((g: any) => (
           <li key={g.id}>
             <span style={{ color: g.color }}>{g.icon ?? "👥"} {g.name}</span>
-            <button onClick={() => deleteGroup(g.id)}>Delete</button>
+            <button onClick={() => deleteGroup(g.id)}>Remove</button>
           </li>
         ))}
       </ul>
